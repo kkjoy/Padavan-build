@@ -2,15 +2,6 @@
 name: Build Padavan for JDY-luban
 
 on: 
-  release:
-    types: [published]
-  push:
-    tags:
-    - 'v*'
-  #  branches: 
-  #    - master
-#  schedule:
-#    - cron: 0 8 * * 5
   watch:
     types: [started]
 
@@ -27,7 +18,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo apt-get update
-        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
+        sudo apt install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
         fakeroot kmod cpio git python3-docutils gettext automake autopoint \
         texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
         libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
@@ -42,52 +33,7 @@ jobs:
         TNAME: JDCLOUD-RE-CP-02
       run: |
         cd /opt/rt-n56u/trunk
-        if [ ! -f configs/templates/$TNAME.config ] ; then
-        echo "configs/templates/$TNAME.config not found "
-        exit 1
-        fi
-        cp -f configs/templates/$TNAME.config .config
-        
-        #######最小化系统及更新设置#######################################################################
-        cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
-        cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
-        sed -i '/2011-2021/{s/2021/2023/}' user/www/Makefile    #过年好
-        sed -i '2c FIRMWARE_BUILDS_VER=230214' versions.inc     #更新版本
-        sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
-        sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
-        #sed -i '/CONFIG_FIRMWARE_ENABLE/{s/=y/=n/}' .config     #关闭所有ENABLE
-        sed -i '/ENABLE_FUSE/{s/=n/=y/}' .config                #开启FUSE
-        sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
-        sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
-        sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
-        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #Hidevpn
-        echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config
-        
-        
-        ######恢复基础工具###############################################################################
-        sed -i '/_OPENSS/{s/=n/=y/}' .config
-        sed -i '/IPSET/{s/=n/=y/}' .config
-        sed -i '/CURL/{s/=n/=y/}' .config
-        sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/IPERF3/{s/=n/=y/}' .config
-        sed -i '/TTYD/{s/=n/=y/}' .config
-        sed -i '/ttyd_enable/{s/0/1/}' user/shared/defaults.c
-        
-        ######默认扩展功能，注释以禁用####################################################################
-        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        
-        ########重新配置smartdns#########################################################################
-        #cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
-        #cp -f $GITHUB_WORKSPACE/smartdns/smartdns.sh  user/smartdns/smartdns.sh
-        #cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
-        #wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
-        #sed -i 's/vlmcsd/sdns/' user/www/n56u_ribbon_fixed/Advanced_Services_Content.asp
-        #echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
-        #sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
-        
-        ######开始打包####################################################################################
-        cp -f .config configs/templates/$TNAME.config
-        sudo ./build_firmware_modify $TNAME 0
+        fakeroot ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages
       uses: actions/upload-artifact@master
