@@ -20,12 +20,6 @@ CONFIG_FIRMWARE_ENABLE_IPV6=y
 ### Enable USB support
 CONFIG_FIRMWARE_ENABLE_USB=y
 
-### Enable FAT/FAT32 filesystem support. ~0.1MB
-CONFIG_FIRMWARE_ENABLE_FAT=y
-
-### Enable exFAT (FAT/FAT32 too) filesystem support. ~0.12MB
-CONFIG_FIRMWARE_ENABLE_EXFAT=y
-
 ### Enable EXT4 (EXT3/2 too) filesystem support. ~0.4MB
 CONFIG_FIRMWARE_ENABLE_EXT4=y
 
@@ -44,12 +38,6 @@ CONFIG_FIRMWARE_INCLUDE_LANG_CN=y
 
 ### Include "parted" utility (allow make GPT partitions). ~0.3MB
 CONFIG_FIRMWARE_INCLUDE_PARTED=y
-
-### Include SMB3.6 (and WINS) server. ~1.5MB
-CONFIG_FIRMWARE_INCLUDE_SMBD=y
-
-### Include WINS server only. ~0.4MB
-CONFIG_FIRMWARE_INCLUDE_WINS=y
 
 ### Include FTP server. ~0.2MB
 CONFIG_FIRMWARE_INCLUDE_FTPD=y
