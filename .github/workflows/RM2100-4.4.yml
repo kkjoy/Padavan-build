@@ -1,0 +1,98 @@
+#修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
+name: Build Padavan for RM2100
+
+on: 
+  release:
+    types: [published]
+  push:
+    tags:
+    - 'v*'
+  #  branches: 
+  #    - master
+#  schedule:
+#    - cron: 0 8 * * 5
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
+        cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
+    - name: Clone source code
+      run: |
+        git clone --depth=1 https://github.com/tsl0922/padavan.git /opt/rt-n56u
+        cd /opt/rt-n56u/toolchain-mipsel
+        sh dl_toolchain.sh
+        mkdir -p /opt/images/
+    - name: Build Firmware
+      env:
+        TNAME: RM2100
+      run: |
+        cd /opt/rt-n56u/trunk
+        if [ ! -f configs/templates/$TNAME.config ] ; then
+        echo "configs/templates/$TNAME.config not found "
+        exit 1
+        fi
+        cp -f configs/templates/$TNAME.config .config
+        
+        #######最小化系统及更新设置#######################################################################
+        cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
+        cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
+        sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
+        sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
+        sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
+        sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
+        sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
+        sed -i '/INCLUDE_SFE/{s/=n/=y/}' .config                #开启SFE
+        
+        ######恢复基础工具###############################################################################
+        sed -i '/_OPENSS/{s/=n/=y/}' .config
+        sed -i '/IPSET/{s/=n/=y/}' .config
+        sed -i '/CURL/{s/=n/=y/}' .config
+        sed -i '/HTOP/{s/=n/=y/}' .config
+        sed -i '/IPERF3/{s/=n/=y/}' .config
+        sed -i '/TTYD/{s/=n/=y/}' .config
+        
+        ######默认扩展功能，注释以禁用####################################################################
+        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
+        
+        ########重新配置smartdns#########################################################################
+        cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
+        cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
+        sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
+        wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
+        
+        #######添加tailscale#############################################################################
+        mkdir -p user/tailscale 
+        cp -f $GITHUB_WORKSPACE/tailscale/Makefile  user/tailscale/Makefile
+        cp -f $GITHUB_WORKSPACE/tailscale/tailscale  user/tailscale/tailscale
+        cp -f $GITHUB_WORKSPACE/tailscale/tailscaled  user/tailscale/tailscaled
+        sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_TAILSCALE)  += tailscale' user/Makefile
+        echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y" >> .config
+        cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
+        
+        #######配置wing##################################################################################
+        echo "CONFIG_FIRMWARE_INCLUDE_WING=y" >> .config
+        
+        ######开始打包####################################################################################
+        sudo ./build_firmware_modify $TNAME 0
+        sudo mv -f images/*.trx /opt/images/
+    - name : Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: RM2100-kvr-smartdns-wing
+        path: /opt/images
