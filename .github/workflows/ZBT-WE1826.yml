@@ -85,7 +85,7 @@ jobs:
         
         ######默认扩展功能，注释以禁用####################################################################
         sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        
+        cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/NEWIFI-MINI/board.h
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
