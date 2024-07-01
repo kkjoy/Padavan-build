@@ -53,7 +53,6 @@ jobs:
         sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
         sed -i '2c FIRMWARE_BUILDS_VER=240701' versions.inc     #更新版本
         sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc    #更新版本
-        sed -i '/OYE-001/ZBT-WE1826/}' .config                  #改名
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
         sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
