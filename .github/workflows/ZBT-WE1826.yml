@@ -64,9 +64,9 @@ jobs:
 
         sed -i '2024c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
         sed -i '2025c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2026c CONFIG_RAETH_ESW_PORT_LAN2=0' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '2026c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
         sed -i '2027c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2028c CONFIG_RAETH_ESW_PORT_LAN4=2' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '2028c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
         echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #Hidevpn
         echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config
         
