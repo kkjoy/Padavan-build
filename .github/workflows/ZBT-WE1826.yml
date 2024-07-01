@@ -38,7 +38,7 @@ jobs:
         mkdir -p /opt/images/
     - name: Build Firmware
       env:
-        TNAME: NEWIFI-MINI
+        TNAME: OYE-001
       run: |
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
@@ -52,22 +52,25 @@ jobs:
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
         sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
         sed -i '2c FIRMWARE_BUILDS_VER=240701' versions.inc     #更新版本
-        sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc     #更新版本
+        sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc    #更新版本
+        sed -i '/OYE-001/ZBT-WE1826/}' .config                  #改名
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
-        sed -i '/CONFIG_FIRMWARE_ENABLE/{s/=y/=n/}' .config     #关闭所有ENABLE
-        sed -i '/ENABLE_FUSE/{s/=n/=y/}' .config                #开启FUSE
-        sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
+        sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
+        sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #开启HTTPS
+        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config              #开启HTTPS
+        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config               #LPRD打印
+        sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启HTTPS
+        sed -i '/INCLUDE_SMBD36/{s/=n/=y/}' .config               #开启HTTPS
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
 
-        sed -i '2024c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2025c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2026c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2027c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '2028c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #Hidevpn
+        sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '1800c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
         echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config
         
         ######更新软件源码###############################################################################
@@ -85,7 +88,7 @@ jobs:
         
         ######默认扩展功能，注释以禁用####################################################################
         sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/NEWIFI-MINI/board.h
+        cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/OYE-001/board.h
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
