@@ -66,11 +66,11 @@ jobs:
         sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
 
-        sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '1800c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
-        sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/NEWIFI-MINI/kernel-3.4.x.config
+        sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1800c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/OYE-001/kernel-3.4.x.config
         echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config
         
         ######更新软件源码###############################################################################
