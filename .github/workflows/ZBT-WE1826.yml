@@ -41,37 +41,31 @@ jobs:
         TNAME: OYE-001
       run: |
         cd /opt/rt-n56u/trunk
+        sed -i '6c CONFIG_FIRMWARE_PRODUCT_ID="ZBT-WE1826"' configs/templates/$TNAME.config
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
         exit 1
         fi
         cp -f configs/templates/$TNAME.config .config
         
-        #######最小化系统及更新设置#######################################################################
+        #######最小化系统及更新设置###################################################################
         cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
         sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
         sed -i '2c FIRMWARE_BUILDS_VER=240701' versions.inc     #更新版本
         sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc    #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
-        sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
-        sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
-        sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #开启HTTPS
-        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config              #开启HTTPS
-        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config               #LPRD打印
-        sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启HTTPS
-        sed -i '/INCLUDE_SMBD36/{s/=n/=y/}' .config               #开启HTTPS
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
-
+        
+        #######修改WAN-LAN适配#######################################################################
         sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=3' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=2' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1800c CONFIG_RAETH_ESW_PORT_LAN3=1' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/OYE-001/kernel-3.4.x.config
-        echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config
-        
+        cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/OYE-001/board.h
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
         sed -i '1c SRC_NAME=openssl-1.1.1s' libs/libssl/Makefile                #更新openssl
@@ -86,8 +80,16 @@ jobs:
         sed -i '/ttyd_enable/{s/0/1/}' user/shared/defaults.c
         
         ######默认扩展功能，注释以禁用####################################################################
-        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/OYE-001/board.h
+        sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
+        sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
+        sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #打印相关
+        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #开启HTTPS
+        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #LPRD打印
+        sed -i '/FTP/{s/=n/=y/}' .config                        #FTP、SFTP文件访问
+        sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启SAMBA
+        sed -i '/INCLUDE_SMBD_SYSLOG/{s/=y/=n/}' .config        #关闭SAMBA日志
+        echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config         #添加SFE支持
+        
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
@@ -95,9 +97,10 @@ jobs:
         wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
         sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
+        
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
-        sudo mv -f images/*.trx /opt/images/
+        sudo mv -f images/*.trx /opt/images/ZBT-WE1826.trx
     - name : Upload packages
       uses: actions/upload-artifact@master
       if: always()
