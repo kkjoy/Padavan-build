@@ -1,5 +1,5 @@
 #修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
-name: Build Padavan for ZBT-WE1826
+name: Build Padavan for YK-L1
 
 on: 
   release:
@@ -52,7 +52,7 @@ jobs:
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
         sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
         sed -i '2c FIRMWARE_BUILDS_VER=240701' versions.inc     #更新版本
-        sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc    #更新版本
+        sed -i '3c FIRMWARE_BUILDS_REV=lissom-mod' versions.inc #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
