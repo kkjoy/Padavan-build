@@ -1,5 +1,5 @@
 #修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
-name: Build Padavan for YK-L1-tailscale
+name: Build Padavan for ZBT-WE1826
 
 on: 
   release:
@@ -32,13 +32,13 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       run: |
-        git clone --depth=1 https://github.com/chongshengB/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/keke1023/Padavan.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
     - name: Build Firmware
       env:
-        TNAME: YK-L1
+        TNAME: OYE-001
       run: |
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
@@ -47,30 +47,48 @@ jobs:
         fi
         cp -f configs/templates/$TNAME.config .config
         
-        #######最小化系统及更新设置#######################################################################
+        #######最小化系统及更新设置###################################################################
         cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
-        sed -i '/2011-2019/{s/2019/2022/}' user/www/Makefile    #过年好
-        sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
+        sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
+        sed -i '2c FIRMWARE_BUILDS_VER=240701' versions.inc     #更新版本
+        sed -i '3c FIRMWARE_BUILDS_REV=zbt-mod' versions.inc    #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
-        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为128MB
-        sed -i '893,894d' user/rc/net.c                         #修复ios访问bug
+        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
+        sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
         
+        #######修改WAN-LAN适配#######################################################################
+        sed -i '802c CONFIG_RT2880_FLASH_32M=y' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=1' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=0' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1800c CONFIG_RAETH_ESW_PORT_LAN3=3' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=2' configs/boards/OYE-001/kernel-3.4.x.config
+        cp -f $GITHUB_WORKSPACE/YK-L1.board.h  configs/boards/OYE-001/board.h
         ######更新软件源码###############################################################################
-        sed -i '1c SRC_NAME = htop-3.0.2' user/htop/Makefile                #更新htop
-        sed -i '2c SRC_URL = http://sources.buildroot.net/htop/htop-3.0.2.tar.gz' user/htop/Makefile 
+        sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
+        sed -i '1c SRC_NAME=openssl-1.1.1s' libs/libssl/Makefile                #更新openssl
+        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1s.patch
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
         sed -i '/IPSET/{s/=n/=y/}' .config
         sed -i '/CURL/{s/=n/=y/}' .config
         sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/IPERF3/{s/=n/=y/}' .config
         sed -i '/TTYD/{s/=n/=y/}' .config
+        sed -i '/ttyd_enable/{s/0/1/}' user/shared/defaults.c
         
         ######默认扩展功能，注释以禁用####################################################################
-        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
+        sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
+        sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
+        sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #打印相关
+        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #开启HTTPS
+        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #LPRD打印
+        sed -i '/FTP/{s/=n/=y/}' .config                        #FTP、SFTP文件访问
+        sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启SAMBA
+        sed -i '/INCLUDE_SMBD_SYSLOG/{s/=y/=n/}' .config        #关闭SAMBA日志
+        echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config         #添加SFE支持
         
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
@@ -78,6 +96,7 @@ jobs:
         sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
         wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
+        sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
         
         #######添加tailscale#############################################################################
         mkdir -p user/tailscale 
@@ -90,10 +109,13 @@ jobs:
         
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
-        sudo mv -f images/*.trx /opt/images/
+        sudo mv -f images/*.trx /opt/images/YK-L1.trx
     - name : Upload packages
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: YK-L1-tail-smartdns
+        name: YK-L1
         path: /opt/images
+        
+
+
