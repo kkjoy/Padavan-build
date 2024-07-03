@@ -59,7 +59,8 @@ jobs:
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
         
         #######修改WAN-LAN适配#######################################################################
-        sed -i '802c CONFIG_RT2880_FLASH_32M=y' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '802c # CONFIG_RT2880_FLASH_16M is not set' configs/boards/OYE-001/kernel-3.4.x.config
+        sed -i '803c CONFIG_RT2880_FLASH_32M=y' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1797c CONFIG_RAETH_ESW_PORT_WAN=4' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1798c CONFIG_RAETH_ESW_PORT_LAN1=1' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '1799c CONFIG_RAETH_ESW_PORT_LAN2=0' configs/boards/OYE-001/kernel-3.4.x.config
