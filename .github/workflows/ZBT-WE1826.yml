@@ -41,7 +41,6 @@ jobs:
         TNAME: OYE-001
       run: |
         cd /opt/rt-n56u/trunk
-        sed -i '6c CONFIG_FIRMWARE_PRODUCT_ID="ZBT-WE1826"' configs/templates/$TNAME.config
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
         exit 1
