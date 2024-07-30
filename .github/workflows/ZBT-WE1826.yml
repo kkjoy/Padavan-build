@@ -82,8 +82,8 @@ jobs:
         sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
         sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
         sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #打印相关
-        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #开启HTTPS
-        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #LPRD打印
+        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #开启硬盘休眠
+        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #分区工具
         sed -i '/FTP/{s/=n/=y/}' .config                        #FTP、SFTP文件访问
         sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启SAMBA
         sed -i '/INCLUDE_SMBD_SYSLOG/{s/=y/=n/}' .config        #关闭SAMBA日志
