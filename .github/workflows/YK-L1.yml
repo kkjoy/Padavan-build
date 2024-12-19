@@ -101,8 +101,7 @@ jobs:
         
         #######添加ipt2socks#############################################################################
         rm -rf user/ipt2socks
-        mkdir -p user/ipt2socks 
-        cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/ipt2socks/
+        cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
         sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
         echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
         
