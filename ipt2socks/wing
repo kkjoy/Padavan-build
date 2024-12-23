@@ -29,7 +29,7 @@ usage()
 update()
 {
 	[ ! -z "$1" ] && _GFWLIST_CONF="$1"
-	curl -k -o $_GFWLIST_CONF https://cokebar.github.io/gfwlist2dnsmasq/gfwlist_domain.txt || exit 1
+	curl -k -o $_GFWLIST_CONF https://raw.githubusercontent.com/pexcn/daily/gh-pages/gfwlist/gfwlist.txt || exit 1
 	echo pypi.org>>$_GFWLIST_CONF
 	echo pythonhosted.org>>$_GFWLIST_CONF
 	echo openwrt.org>>$_GFWLIST_CONF
