@@ -86,6 +86,9 @@ jobs:
         cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
         sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
         echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
+        #######更新预编译dnsmasq##########################################################################
+        rm -rf user/dnsmasq
+        cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
