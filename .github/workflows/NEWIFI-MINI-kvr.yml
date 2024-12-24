@@ -50,8 +50,9 @@ jobs:
         #######最小化系统及更新设置#######################################################################
         cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
-        sed -i '/2011-2019/{s/2019/2022/}' user/www/Makefile    #过年好
-        sed -i '2c FIRMWARE_BUILDS_VER=221010' versions.inc     #更新版本
+        cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
+        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
+        sed -i '2c FIRMWARE_BUILDS_VER=241224' versions.inc     #更新版本
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/CONFIG_FIRMWARE_ENABLE/{s/=y/=n/}' .config     #关闭所有ENABLE
@@ -68,8 +69,8 @@ jobs:
         
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
-        sed -i '1c SRC_NAME=openssl-1.1.1s' libs/libssl/Makefile                #更新openssl
-        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1s.patch
+        sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
+        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
@@ -91,15 +92,6 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
         sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
         
-        #######添加tailscale#############################################################################
-        mkdir -p user/tailscale 
-        cp -f $GITHUB_WORKSPACE/tailscale/Makefile  user/tailscale/Makefile
-        cp -f $GITHUB_WORKSPACE/tailscale/tailscale  user/tailscale/tailscale
-        cp -f $GITHUB_WORKSPACE/tailscale/tailscaled  user/tailscale/tailscaled
-        sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_TAILSCALE)  += tailscale' user/Makefile
-        echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y" >> .config
-        cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
-        
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
@@ -107,5 +99,5 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: NEWIFI-MINI-kvr-tail-smartdns
+        name: NEWIFI-MINI-kvr-smartdns
         path: /opt/images
