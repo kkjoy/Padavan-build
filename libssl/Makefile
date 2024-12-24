@@ -1,13 +1,18 @@
-include $(ROOTDIR)/rules.mk
+SRC_NAME=openssl-3.4.0
+SRC_URL=https://github.com/openssl/openssl/releases/download/$(SRC_NAME)/$(SRC_NAME).tar.gz
 
-PKG_NAME:=openssl
-PKG_VERSION:=3.4.0
+# openssl use CROSS_COMPILE prefix
+CC = gcc
+AR = ar
+RANLIB = ranlib
+CXX = g++
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://github.com/openssl/openssl/releases/download/$(PKG_NAME)-$(PKG_VERSION)/$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf
+COPTS = $(CPUFLAGS) -O3 $(filter-out -O%, $(CFLAGS))
+COPTS += $(if $(CONFIG_IPV6),-DOPENSSL_USE_IPV6=1,)
+COPTS += -DOPENSSL_PREFER_CHACHA_OVER_GCM
 
-include $(INCLUDE_DIR)/package.mk
+CFLAGS := $(COPTS)
+CXXFLAGS := $(COPTS)
 
 OPENSSL_CIPHERS = no-capieng no-cms no-rfc3779 no-seed \
   no-ec2m no-err no-threads no-idea no-rc5 no-rmd160 \
@@ -25,34 +30,55 @@ ifneq ($(CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC),y)
 OPENSSL_CIPHERS += no-ec
 endif
 
-CONFIGURE_CMD = ./Configure
-CONFIGURE_ARGS = \
-	linux-mips32 \
-	shared \
-	--prefix=$(STAGING_DIR) \
-	--openssldir=/etc/ssl \
-	$(OPENSSL_CIPHERS)
+all: download_test extract_test config_test
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
-define Build/Install
-	$(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) \
-		$(MAKE_FLAGS) \
-		DESTDIR= \
-		install_sw
-	$(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) \
-		$(MAKE_FLAGS) \
-		DESTDIR=$(STAGING_DIR) \
-		install_ssldirs
-endef
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	fi )
 
-$(eval $(call BuildPackage,openssl))
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		tar -xf $(SRC_NAME).tar.gz; \
+		patch -d $(SRC_NAME) -p1 < $(SRC_NAME)\patches\130-dont-build-fuzz-docs.patch; \
+		patch -d $(SRC_NAME) -p1 < $(SRC_NAME)\patches\140-allow-prefer-chacha20.patch; \
+	fi )
+
+config_test:
+	( if [ -f ./config_done ]; then \
+		echo "the same configuration"; \
+	else \
+		make configure && touch config_done; \
+	fi )
+
+configure:
+	( cd $(SRC_NAME) ; \
+	./Configure \
+		linux-mips32 \
+		shared \
+		--prefix=$(STAGEDIR) \
+		--openssldir=/etc/ssl \
+		$(OPENSSL_CIPHERS) ; \
+	)
+
+clean:
+	if [ -f $(SRC_NAME)/Makefile ] ; then \
+		$(MAKE) -C $(SRC_NAME) clean ; \
+	fi ; \
+	rm -f config_done
+
+install:
+	$(MAKE) -C $(SRC_NAME) install_sw DESTDIR=""
+	$(MAKE) -C $(SRC_NAME) install_ssldirs DESTDIR="$(STAGEDIR)"
+	rm -f $(DESTDIR)/lib/libssl.a
+	rm -f $(DESTDIR)/lib/libcrypto.a
 
 romfs:
-	$(INSTALL_DIR) $(ROMFSDIR)/lib
-	$(CP) $(PKG_INSTALL_DIR)/lib/libssl.so* $(ROMFSDIR)/lib/
-	$(CP) $(PKG_INSTALL_DIR)/lib/libcrypto.so* $(ROMFSDIR)/lib/
-	$(INSTALL_DIR) $(ROMFSDIR)/etc_ro
-	$(INSTALL_DATA) ./openssl.cnf $(ROMFSDIR)/etc_ro/openssl.cnf
+	cp -fP $(DESTDIR)/lib/libssl.so* $(ROMFSDIR)/lib
+	cp -fP $(DESTDIR)/lib/libcrypto.so* $(ROMFSDIR)/lib
+	$(ROMFSINST) /etc_ro/openssl.cnf
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE),y)
-	$(INSTALL_DIR) $(ROMFSDIR)/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/openssl $(ROMFSDIR)/bin/
+	$(ROMFSINST) $(SRC_NAME)/apps/openssl /usr/bin/openssl
 endif
+
