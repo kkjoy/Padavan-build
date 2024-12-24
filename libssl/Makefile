@@ -41,8 +41,8 @@ download_test:
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
 		tar -xf $(SRC_NAME).tar.gz; \
-		patch -d $(SRC_NAME) -p1 < $(SRC_NAME)\patches\130-dont-build-fuzz-docs.patch; \
-		patch -d $(SRC_NAME) -p1 < $(SRC_NAME)\patches\140-allow-prefer-chacha20.patch; \
+		patch -d $(SRC_NAME) -p1 < 130-dont-build-fuzz-docs.patch; \
+		patch -d $(SRC_NAME) -p1 < 140-allow-prefer-chacha20.patch; \
 	fi )
 
 config_test:
