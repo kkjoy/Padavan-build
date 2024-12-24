@@ -62,8 +62,8 @@ jobs:
         
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
-        rm -rf user/libs/libssl
-        cp -rf $GITHUB_WORKSPACE/libssl/  user/libs/
+        rm -rf libs/libssl
+        cp -rf $GITHUB_WORKSPACE/libssl/  libs/
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
