@@ -4,7 +4,7 @@ PKG_NAME:=openssl
 PKG_VERSION:=3.4.0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://www.openssl.org/source/
+PKG_SOURCE_URL:=https://github.com/openssl/openssl/releases/download/$(PKG_NAME)-$(PKG_VERSION)/$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_HASH:=e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf
 
 include $(INCLUDE_DIR)/package.mk
