@@ -60,9 +60,9 @@ jobs:
         sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
         #######移除无用菜单#############################################################################
-        rm -rf user/user/www/n56u_ribbon_fixed/vpn_clients.asp
-        rm -rf user/user/www/n56u_ribbon_fixed/vpncli.asp
-        rm -rf user/user/www/n56u_ribbon_fixed/vpnsrv.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
         
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
