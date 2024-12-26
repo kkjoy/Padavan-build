@@ -55,6 +55,7 @@ jobs:
         sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
+        sed -i '/SFE/{s/=n/=y/}' .config                        #开启SFE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
@@ -73,9 +74,6 @@ jobs:
         sed -i '/IPSET/{s/=n/=y/}' .config
         sed -i '/CURL/{s/=n/=y/}' .config
         sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/TTYD/{s/=n/=y/}' .config
-        
-        ######默认扩展功能，注释以禁用####################################################################
         sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
         
         ########重新配置smartdns#########################################################################
