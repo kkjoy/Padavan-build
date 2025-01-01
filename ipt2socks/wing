@@ -32,7 +32,7 @@ update()
 	curl -k -o $_GFWLIST_CONF https://raw.githubusercontent.com/pexcn/daily/gh-pages/gfwlist/gfwlist.txt || exit 1
 	echo pypi.org>>$_GFWLIST_CONF
 	echo pythonhosted.org>>$_GFWLIST_CONF
-	echo openwrt.org>>$_GFWLIST_CONF
+	echo docker.io>>$_GFWLIST_CONF
 	echo lede-project.org>>$_GFWLIST_CONF
 	echo facebook-hardware.com>>$_GFWLIST_CONF
 	echo fbthirdpartypixel.com>>$_GFWLIST_CONF
