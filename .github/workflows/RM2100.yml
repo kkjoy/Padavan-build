@@ -59,10 +59,13 @@ jobs:
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
+        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
         #######移除无用菜单#############################################################################
         rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
         rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
         rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
+        sed -i '594c menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");' user/www/n56u_ribbon_fixed/state.js
+        sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
         
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
