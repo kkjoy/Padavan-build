@@ -48,7 +48,7 @@ jobs:
         sed -i '/IPSET/{s/=n/=y/}' .config
         #######更新预编译dnsmasq##########################################################################
         rm -rf user/dnsmasq/dnsmasq-2.8x
-        git checkout git@github.com:Yonsm/dnsmasq.git user/dnsmasq/dnsmasq-2.8x
+        git clone --depth=1 https://github.com/Yonsm/dnsmasq user/dnsmasq/dnsmasq-2.8x
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
