@@ -69,21 +69,17 @@ jobs:
         sed -i '/HTOP/{s/=n/=y/}' .config
         sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
         
-        ########重新配置smartdns#########################################################################
-        cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
-        cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
-        sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
-        wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
-        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
-        
         #######添加ipt2socks#############################################################################
         rm -rf user/ipt2socks
         cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
         sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
         echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
         #######更新预编译dnsmasq##########################################################################
-        rm -rf user/dnsmasq
-        cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
+        #rm -rf user/dnsmasq
+        #cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
+        #######更新预编译dnsmasq2.9##########################################################################
+        rm -rf user/dnsmasq/dnsmasq-2.8x
+        git clone --depth=1 https://github.com/Yonsm/dnsmasq user/dnsmasq/dnsmasq-2.8x
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
@@ -91,5 +87,5 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: RM2100-kvr-smartdns-wing
+        name: RM2100-kvr-wing
         path: /opt/images
