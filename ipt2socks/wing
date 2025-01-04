@@ -245,12 +245,12 @@ if [ $_OS = PADAVAN ]; then
 	ipset add gfwlist 8.8.8.8
 
 	# dnsmasq
-	GFWLIST_LINE="gfwlist=$_GFWLIST_CONF"
-	if ! grep "$GFWLIST_LINE" $_DNSMASQ_CONF > /dev/null; then
-		killall dnsmasq
-		echo "$GFWLIST_LINE" >> $_DNSMASQ_CONF
-		dnsmasq
-	fi
+	#GFWLIST_LINE="gfwlist=$_GFWLIST_CONF"
+	#if ! grep "$GFWLIST_LINE" $_DNSMASQ_CONF > /dev/null; then
+	#	killall dnsmasq
+	#	echo "$GFWLIST_LINE" >> $_DNSMASQ_CONF
+	#	dnsmasq
+	#fi
 fi
 	inject -A $3 $4
 }
@@ -365,7 +365,7 @@ if [ $_OS = PADAVAN ]; then
 	[ "$1" == "-R" ] && return
 
 	prepare
-	sed -i /gfwlist=${_GFWLIST_CONF//\//\\/}/d $_DNSMASQ_CONF
+	#sed -i /gfwlist=${_GFWLIST_CONF//\//\\/}/d $_DNSMASQ_CONF
 	killall dnsmasq
 	dnsmasq
 fi
