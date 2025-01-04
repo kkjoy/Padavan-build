@@ -3,6 +3,7 @@ THISDIR := $(shell pwd)
 
 all: 
 	@echo "ipt2socks build ok!"
+	curl -k -o gfwlist.txt https://raw.githubusercontent.com/pexcn/daily/gh-pages/gfwlist/gfwlist.txt
 
 clean:
 	@echo "ipt2socks clean ok!"
