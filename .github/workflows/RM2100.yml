@@ -59,7 +59,7 @@ jobs:
         
         ######更新软件源码###############################################################################
         rm -f user/htop/Makefile                #更新htop
-        wget https://github.com/vb1980/Padavan-KVR/raw/refs/heads/main/trunk/user/htop/Makefile user/htop/Makefile
+        wget -t5 --timeout=20 --no-check-certificate -O user/htop/Makefile https://github.com/vb1980/Padavan-KVR/raw/refs/heads/main/trunk/user/htop/Makefile
         sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
         mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
         
