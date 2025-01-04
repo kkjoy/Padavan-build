@@ -22,7 +22,7 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       run: |
-        git clone --depth=1 https://github.com/vb1980/Padavan-KVR /opt/rt-n56u
+        git clone --depth=1 https://github.com/keke1023/Padavan.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
@@ -40,7 +40,7 @@ jobs:
         #######最小化系统及更新设置#######################################################################
         cp -f $GITHUB_WORKSPACE/asus_logo.png                   user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
         cp -f $GITHUB_WORKSPACE/banner                          user/scripts/banner
-        sed -i '/2011-2021/{s/2021/2025/}' user/www/Makefile    #过年好
+        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
@@ -49,7 +49,6 @@ jobs:
         #######更新预编译dnsmasq##########################################################################
         rm -rf user/dnsmasq/dnsmasq-2.8x
         git clone --depth=1 https://github.com/Yonsm/dnsmasq user/dnsmasq/dnsmasq-2.8x
-        sed -i '76c version =       -DVERSION='2.90-yonsm' user/dnsmasq/dnsmasq-2.8x/Makefile
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
@@ -57,5 +56,5 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: RM2100-dnsmasq
+        name: RM2100-kvr-smartdns-wing
         path: /opt/images
