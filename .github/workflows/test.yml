@@ -49,7 +49,10 @@ jobs:
         #######更新预编译dnsmasq##########################################################################
         rm -rf user/dnsmasq/dnsmasq-2.8x
         git clone --depth=1 https://github.com/Yonsm/dnsmasq user/dnsmasq/dnsmasq-2.8x
-        sed -i '76c version =       -DVERSION='2.90-yonsm' user/dnsmasq/dnsmasq-2.8x/Makefile
+        cd user/dnsmasq/dnsmasq-2.8x
+        git remote add upstream git://thekelleys.org.uk/dnsmasq.git
+        sed -i '76c version =       -DVERSION='2.90-yonsm' Makefile
+        cd /opt/rt-n56u/trunk
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
