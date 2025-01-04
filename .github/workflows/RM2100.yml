@@ -49,11 +49,15 @@ jobs:
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
         sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
+        
+        #######自定义分区大小###########################################################################
+        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
+        sed -i '9c size_etc="97M"' user/scripts/dev_init.sh     #调整存储分区为97MB
+        sed -i '6c mtd_part_size=101711872' user/scripts/mtd_storage.sh
+        sed -i '878c CONFIG_MTD_STORE_PART_SIZ=0x6100000' configs/boards/RM2100/kernel-3.4.x-5.0.config
+        
+        #######移除无用VPN菜单##########################################################################
         echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
-        sed -i '878c CONFIG_MTD_STORE_PART_SIZ=0x5a00000' configs/boards/RM2100/kernel-3.4.x-5.0.config
-        sed -i '9c size_etc="90M"' user/scripts/dev_init.sh
-        sed -i '6c mtd_part_size=94371840' user/scripts/mtd_storage.sh
-        #######移除无用菜单#############################################################################
         rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
         rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
         rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
@@ -77,9 +81,11 @@ jobs:
         cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
         sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
         echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
+       
         #######更新预编译dnsmasq##########################################################################
         rm -rf user/dnsmasq
         cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
+        
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
@@ -88,6 +94,7 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
         sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
         cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
+        
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
@@ -95,5 +102,5 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: RM2100-kvr-wing
+        name: RM2100-kvr-wing-smartdns
         path: /opt/images
