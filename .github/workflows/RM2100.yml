@@ -50,6 +50,9 @@ jobs:
         sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
         echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
+        sed -i '878c CONFIG_MTD_STORE_PART_SIZ=0x5a00000' configs/boards/RM2100/kernel-3.4.x-5.0.config
+        sed -i '9c size_etc="90M"' user/scripts/dev_init.sh
+        sed -i '6c mtd_part_size=94371840' user/scripts/mtd_storage.sh
         #######移除无用菜单#############################################################################
         rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
         rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
