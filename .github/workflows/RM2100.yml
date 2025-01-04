@@ -80,6 +80,14 @@ jobs:
         #######更新预编译dnsmasq##########################################################################
         rm -rf user/dnsmasq
         cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
+        ########重新配置smartdns#########################################################################
+        cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
+        cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
+        sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
+        wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
+        sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
+        cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
