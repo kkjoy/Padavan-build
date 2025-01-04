@@ -58,7 +58,7 @@ jobs:
         sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
         
         ######更新软件源码###############################################################################
-        rm -f user/htop/Makefile                #更新htop
+        rm -f user/htop/Makefile                                                #更新htop
         wget -t5 --timeout=20 --no-check-certificate -O user/htop/Makefile https://github.com/vb1980/Padavan-KVR/raw/refs/heads/main/trunk/user/htop/Makefile
         sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
         mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
@@ -76,11 +76,8 @@ jobs:
         sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
         echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
         #######更新预编译dnsmasq##########################################################################
-        #rm -rf user/dnsmasq
-        #cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
-        #######更新预编译dnsmasq2.9##########################################################################
-        rm -rf user/dnsmasq/dnsmasq-2.8x
-        git clone --depth=1 https://github.com/Yonsm/dnsmasq user/dnsmasq/dnsmasq-2.8x
+        rm -rf user/dnsmasq
+        cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
