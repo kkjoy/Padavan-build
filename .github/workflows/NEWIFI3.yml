@@ -53,8 +53,8 @@ jobs:
         #######自定义分区大小###########################################################################
         sed -i '7c size_tmp="128M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
         sed -i '9c size_etc="16M"' user/scripts/dev_init.sh     #调整存储分区为16MB
-        #sed -i '6c mtd_part_size=16777216' user/scripts/mtd_storage.sh
-        #sed -i '857c CONFIG_MTD_STORE_PART_SIZ=0x1000000' configs/boards/NEWIFI3/kernel-3.4.x.config
+        sed -i '6c mtd_part_size=16777216' user/scripts/mtd_storage.sh
+        sed -i '857c CONFIG_MTD_STORE_PART_SIZ=0x1000000' configs/boards/NEWIFI3/kernel-3.4.x.config
         
         #######移除无用VPN菜单##########################################################################
         echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
