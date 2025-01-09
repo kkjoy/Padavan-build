@@ -40,14 +40,28 @@ jobs:
         #######最小化系统及更新设置###################################################################
         cp -f $GITHUB_WORKSPACE/asus_logo.png  user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
         cp -f $GITHUB_WORKSPACE/banner         user/scripts/banner
-        sed -i '/2011-2019/{s/2019/2024/}' user/www/Makefile    #过年好
+        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
         sed -i '14c BOARD_PATTERN=s/ZVMODELVZ/YK-L1/g' user/www/Makefile
-        sed -i '2c FIRMWARE_BUILDS_VER=241219' versions.inc     #更新版本
+        sed -i '2c FIRMWARE_BUILDS_VER=250110' versions.inc     #更新版本
         sed -i '3c FIRMWARE_BUILDS_REV=lissom-mod' versions.inc #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
-        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
         sed -i '898,899d' user/rc/net.c                         #修复ios访问bug
+        
+        #######自定义分区大小###########################################################################
+        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh     #调整/tmp分区为32MB
+        sed -i '9c size_etc="16M"' user/scripts/dev_init.sh     #调整存储分区为16MB
+        sed -i '6c mtd_part_size=16777216' user/scripts/mtd_storage.sh
+        sed -i '857c CONFIG_MTD_STORE_PART_SIZ=0x1000000' configs/boards/OYE-001/kernel-3.4.x.config
+        
+        #######移除无用VPN菜单##########################################################################
+        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
+        rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
+        sed -i '594c menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");' user/www/n56u_ribbon_fixed/state.js
+        sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
+        
         #######修改WAN-LAN适配#######################################################################
         sed -i '802c # CONFIG_RT2880_FLASH_16M is not set' configs/boards/OYE-001/kernel-3.4.x.config
         sed -i '803c CONFIG_RT2880_FLASH_32M=y' configs/boards/OYE-001/kernel-3.4.x.config
@@ -58,23 +72,21 @@ jobs:
         sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=3' configs/boards/OYE-001/kernel-3.4.x.config
         ######更新软件源码###############################################################################
         sed -i '/htop-3.0.5/{s/3.0.5/3.0.2/}' user/htop/Makefile                #更新htop
-        sed -i '1c SRC_NAME=openssl-1.1.1s' libs/libssl/Makefile                #更新openssl
-        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1s.patch
+        sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
+        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
         sed -i '/IPSET/{s/=n/=y/}' .config
         sed -i '/CURL/{s/=n/=y/}' .config
         sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/TTYD/{s/=n/=y/}' .config
-        sed -i '/ttyd_enable/{s/0/1/}' user/shared/defaults.c
         
         ######默认扩展功能，注释以禁用####################################################################
         sed -i '/INCLUDE_HTTPS/{s/=n/=y/}' .config              #开启HTTPS
         sed -i '/INCLUDE_LPRD/{s/=n/=y/}' .config               #LPRD打印
         sed -i '/INCLUDE_U2EC/{s/=n/=y/}' .config               #打印相关
-        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #开启HTTPS
-        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #LPRD打印
+        sed -i '/INCLUDE_HDPARM/{s/=n/=y/}' .config             #硬盘管理
+        sed -i '/INCLUDE_PARTED/{s/=n/=y/}' .config             #分区工具
         sed -i '/FTP/{s/=n/=y/}' .config                        #FTP、SFTP文件访问
         sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启SAMBA
         sed -i '/INCLUDE_SMBD_SYSLOG/{s/=y/=n/}' .config        #关闭SAMBA日志
@@ -88,6 +100,10 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
         sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
         cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
+        
+        #######更新预编译dnsmasq##########################################################################
+        rm -rf user/dnsmasq
+        cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
         
         #######添加ipt2socks#############################################################################
         rm -rf user/ipt2socks
