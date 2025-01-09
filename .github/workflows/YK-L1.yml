@@ -90,7 +90,6 @@ jobs:
         sed -i '/FTP/{s/=n/=y/}' .config                        #FTP、SFTP文件访问
         sed -i '/INCLUDE_SMBD/{s/=n/=y/}' .config               #开启SAMBA
         sed -i '/INCLUDE_SMBD_SYSLOG/{s/=y/=n/}' .config        #关闭SAMBA日志
-        echo "CONFIG_FIRMWARE_INCLUDE_SFE=y" >> .config         #添加SFE支持
         
         ########重新配置smartdns#########################################################################
         cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
