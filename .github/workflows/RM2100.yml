@@ -72,6 +72,7 @@ jobs:
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
+        sed -i '/HTTPS/{s/=n/=y/}' .config
         sed -i '/IPSET/{s/=n/=y/}' .config
         sed -i '/CURL/{s/=n/=y/}' .config
         sed -i '/HTOP/{s/=n/=y/}' .config
