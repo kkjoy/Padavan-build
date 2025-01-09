@@ -286,7 +286,7 @@ EOF
 ### Called after internal iptables reconfig (firewall update)
 
 #wing resume
-#ddnsto  -u xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx(你的令牌) -daemon
+#ddnsto -d-u xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx(你的令牌)
 EOF
 		chmod 755 "$script_postf"
 	fi
