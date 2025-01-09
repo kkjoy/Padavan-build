@@ -188,15 +188,9 @@ func_fill()
 {
 	dir_httpssl="$dir_storage/https"
 	dir_dnsmasq="$dir_storage/dnsmasq"
-	dir_ovpnsvr="$dir_storage/openvpn/server"
-	dir_ovpncli="$dir_storage/openvpn/client"
-	dir_sswan="$dir_storage/strongswan"
-	dir_sswan_crt="$dir_sswan/ipsec.d"
 	dir_inadyn="$dir_storage/inadyn"
 	dir_crond="$dir_storage/cron/crontabs"
 	dir_wlan="$dir_storage/wlan"
-	dir_chnroute="$dir_storage/chinadns"
-	dir_gfwlist="$dir_storage/gfwlist"
 
 	script_start="$dir_storage/start_script.sh"
 	script_started="$dir_storage/started_script.sh"
@@ -204,8 +198,6 @@ func_fill()
 	script_postf="$dir_storage/post_iptables_script.sh"
 	script_postw="$dir_storage/post_wan_script.sh"
 	script_inets="$dir_storage/inet_state_script.sh"
-	script_vpnsc="$dir_storage/vpns_client_script.sh"
-	script_vpncs="$dir_storage/vpnc_server_script.sh"
 	script_ezbtn="$dir_storage/ez_buttons_script.sh"
 
 	user_hosts="$dir_dnsmasq/hosts"
@@ -214,32 +206,13 @@ func_fill()
 	user_ovpnsvr_conf="$dir_ovpnsvr/server.conf"
 	user_ovpncli_conf="$dir_ovpncli/client.conf"
 	user_inadyn_conf="$dir_inadyn/inadyn.conf"
-	user_sswan_conf="$dir_sswan/strongswan.conf"
-	user_sswan_ipsec_conf="$dir_sswan/ipsec.conf"
-	user_sswan_secrets="$dir_sswan/ipsec.secrets"
 	
-	chnroute_file="/etc_ro/chnroute.bz2"
-	gfwlist_conf_file="/etc_ro/gfwlist.bz2"
 
 	# create crond dir
 	[ ! -d "$dir_crond" ] && mkdir -p -m 730 "$dir_crond"
 
 	# create https dir
 	[ ! -d "$dir_httpssl" ] && mkdir -p -m 700 "$dir_httpssl"
-
-	# create chnroute.txt
-	if [ ! -d "$dir_chnroute" ] ; then
-		if [ -f "$chnroute_file" ]; then
-			mkdir -p "$dir_chnroute" && tar jxf "$chnroute_file" -C "$dir_chnroute"
-		fi
-	fi
-
-	# create gfwlist
-	if [ ! -d "$dir_gfwlist" ] ; then
-		if [ -f "$gfwlist_conf_file" ]; then	
-			mkdir -p "$dir_gfwlist" && tar jxf "$gfwlist_conf_file" -C "$dir_gfwlist"
-		fi
-	fi
 
 	# create start script
 	if [ ! -f "$script_start" ] ; then
@@ -261,6 +234,10 @@ func_fill()
 #modprobe ip_set_bitmap_ip
 #modprobe ip_set_list_set
 #modprobe xt_set
+
+#modprobe ip6table_mangle
+#ebtables -t broute -A BROUTING -p ! ipv6 -j DROP -i apclii0
+#brctl addif br0 apclii0
 
 #drop caches
 sync && echo 3 > /proc/sys/vm/drop_caches
@@ -309,7 +286,7 @@ EOF
 ### Called after internal iptables reconfig (firewall update)
 
 #wing resume
-
+#ddnsto  -u xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx(你的令牌) -daemon
 EOF
 		chmod 755 "$script_postf"
 	fi
@@ -345,105 +322,7 @@ EOF
 		chmod 755 "$script_inets"
 	fi
 
-	# create vpn server action script
-	if [ ! -f "$script_vpnsc" ] ; then
-		cat > "$script_vpnsc" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called after remote peer connected/disconnected to internal VPN server
-### \$1 - peer action (up/down)
-### \$2 - peer interface name (e.g. ppp10)
-### \$3 - peer local IP address
-### \$4 - peer remote IP address
-### \$5 - peer name
-
-peer_if="\$2"
-peer_ip="\$4"
-peer_name="\$5"
-
-### example: add static route to private LAN subnet behind a remote peer
-
-func_ipup()
-{
-#  if [ "\$peer_name" == "dmitry" ] ; then
-#    route add -net 192.168.5.0 netmask 255.255.255.0 dev \$peer_if
-#  elif [ "\$peer_name" == "victoria" ] ; then
-#    route add -net 192.168.8.0 netmask 255.255.255.0 dev \$peer_if
-#  fi
-   return 0
-}
-
-func_ipdown()
-{
-#  if [ "\$peer_name" == "dmitry" ] ; then
-#    route del -net 192.168.5.0 netmask 255.255.255.0 dev \$peer_if
-#  elif [ "\$peer_name" == "victoria" ] ; then
-#    route del -net 192.168.8.0 netmask 255.255.255.0 dev \$peer_if
-#  fi
-   return 0
-}
-
-case "\$1" in
-up)
-  func_ipup
-  ;;
-down)
-  func_ipdown
-  ;;
-esac
-
-EOF
-		chmod 755 "$script_vpnsc"
-	fi
-
-	# create vpn client action script
-	if [ ! -f "$script_vpncs" ] ; then
-		cat > "$script_vpncs" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called after internal VPN client connected/disconnected to remote VPN server
-### \$1        - action (up/down)
-### \$IFNAME   - tunnel interface name (e.g. ppp5 or tun0)
-### \$IPLOCAL  - tunnel local IP address
-### \$IPREMOTE - tunnel remote IP address
-### \$DNS1     - peer DNS1
-### \$DNS2     - peer DNS2
-
-# private LAN subnet behind a remote server (example)
-peer_lan="192.168.9.0"
-peer_msk="255.255.255.0"
-
-### example: add static route to private LAN subnet behind a remote server
-
-func_ipup()
-{
-#  route add -net \$peer_lan netmask \$peer_msk gw \$IPREMOTE dev \$IFNAME
-   return 0
-}
-
-func_ipdown()
-{
-#  route del -net \$peer_lan netmask \$peer_msk gw \$IPREMOTE dev \$IFNAME
-   return 0
-}
-
-logger -t vpnc-script "\$IFNAME \$1"
-
-case "\$1" in
-up)
-  func_ipup
-  ;;
-down)
-  func_ipdown
-  ;;
-esac
-
-EOF
-		chmod 755 "$script_vpncs"
-	fi
-
+	
 	# create Ez-Buttons script
 	if [ ! -f "$script_ezbtn" ] ; then
 		cat > "$script_ezbtn" <<EOF
@@ -584,97 +463,6 @@ EOF
 
 EOF
 		chmod 644 "$dir_wlan/AP_5G.dat"
-	fi
-
-	# create openvpn files
-	if [ -x /usr/sbin/openvpn ] ; then
-		[ ! -d "$dir_ovpncli" ] && mkdir -p -m 700 "$dir_ovpncli"
-		[ ! -d "$dir_ovpnsvr" ] && mkdir -p -m 700 "$dir_ovpnsvr"
-		dir_ovpn="$dir_storage/openvpn"
-		for i in ca.crt dh1024.pem server.crt server.key server.conf ta.key ; do
-			[ -f "$dir_ovpn/$i" ] && mv -n "$dir_ovpn/$i" "$dir_ovpnsvr"
-		done
-		if [ ! -f "$user_ovpnsvr_conf" ] ; then
-			cat > "$user_ovpnsvr_conf" <<EOF
-# Custom user conf file for OpenVPN server
-# Please add needed params only!
-
-### Max clients limit
-max-clients 10
-
-### Internally route client-to-client traffic
-client-to-client
-
-### Allow clients with duplicate "Common Name"
-;duplicate-cn
-
-### Legacy LZO adaptive compression
-;comp-lzo adaptive
-;push "comp-lzo adaptive"
-
-### Keepalive and timeout
-keepalive 10 60
-
-### Process priority level (0..19)
-nice 3
-
-### Syslog verbose level
-verb 0
-mute 10
-
-EOF
-			chmod 644 "$user_ovpnsvr_conf"
-		fi
-
-		if [ ! -f "$user_ovpncli_conf" ] ; then
-			cat > "$user_ovpncli_conf" <<EOF
-# Custom user conf file for OpenVPN client
-# Please add needed params only!
-
-### If your server certificates with the nsCertType field set to "server"
-remote-cert-tls server
-
-### Process priority level (0..19)
-nice 0
-
-### Syslog verbose level
-verb 0
-mute 10
-
-EOF
-			chmod 644 "$user_ovpncli_conf"
-		fi
-	fi
-
-	# create strongswan files
-	if [ -x /usr/sbin/ipsec ] ; then
-		[ ! -d "$dir_sswan" ] && mkdir -p -m 700 "$dir_sswan"
-		[ ! -d "$dir_sswan_crt" ] && mkdir -p -m 700 "$dir_sswan_crt"
-		[ ! -d "$dir_sswan_crt/cacerts" ] && mkdir -p -m 700 "$dir_sswan_crt/cacerts"
-		[ ! -d "$dir_sswan_crt/certs" ] && mkdir -p -m 700 "$dir_sswan_crt/certs"
-		[ ! -d "$dir_sswan_crt/private" ] && mkdir -p -m 700 "$dir_sswan_crt/private"
-
-		if [ ! -f "$user_sswan_conf" ] ; then
-			cat > "$user_sswan_conf" <<EOF
-### strongswan.conf - user strongswan configuration file
-
-EOF
-			chmod 644 "$user_sswan_conf"
-		fi
-		if [ ! -f "$user_sswan_ipsec_conf" ] ; then
-			cat > "$user_sswan_ipsec_conf" <<EOF
-### ipsec.conf - user strongswan IPsec configuration file
-
-EOF
-			chmod 644 "$user_sswan_ipsec_conf"
-		fi
-		if [ ! -f "$user_sswan_secrets" ] ; then
-			cat > "$user_sswan_secrets" <<EOF
-### ipsec.secrets - user strongswan IPsec secrets file
-
-EOF
-			chmod 644 "$user_sswan_secrets"
-		fi
 	fi
 }
 
