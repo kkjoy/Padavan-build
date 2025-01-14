@@ -1,4 +1,4 @@
-name: Build Padavan 4.4
+name: Build Padavan JDCLOUD-RE-CP-02-4.4
 
 on:
   workflow_dispatch:
@@ -77,6 +77,7 @@ jobs:
         sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
         
         ######开始打包####################################################################################
+        cp -f .config configs/templates/$TNAME.config
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages
