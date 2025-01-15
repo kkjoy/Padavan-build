@@ -30,6 +30,7 @@ jobs:
       run: |
         cd /opt/rt-n56u
         sed -i '5c TOOLCHAIN_URL:=https://github.com/tsl0922/padavan/releases/download/toolchain/mipsel-linux-uclibc-gcc-12.3.0.tar.xz' Makefile
+        sed -i '/GETTEXT_MACRO_VERSION/{s/0.20/0.19/}' trunk/tools/mksquashfs_xz/xz-5.4.6/po/Makefile.in.in
         make $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages
