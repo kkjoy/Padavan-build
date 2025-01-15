@@ -28,50 +28,7 @@ jobs:
       env:
         TNAME: RE-CP-02
       run: |
-        cd /opt/rt-n56u/trunk
-        mv configs/templates/JDCLOUD-RE-CP-02.config configs/templates/RE-CP-02.config
-        if [ ! -f configs/templates/$TNAME.config ] ; then
-        echo "configs/templates/$TNAME.config not found "
-        exit 1
-        fi
-        cp -f configs/templates/$TNAME.config .config
-        
-        #######最小化系统及更新设置#######################################################################
-        cp -f $GITHUB_WORKSPACE/asus_logo.png                   user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png   #替换logo
-        cp -f $GITHUB_WORKSPACE/banner                          user/scripts/banner
-        sed -i '/2011-2021/{s/2021/2025/}' user/www/Makefile    #过年好
-        sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
-        sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
-        sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
-        sed -i '/ENABLE_USB/{s/=y/=n/}' .config                 #开启IPV6
-        
-        #######自定义分区大小###########################################################################
-        sed -i '7c size_tmp="128M"' user/scripts/dev_init.sh     #调整/tmp分区为128MB
-        sed -i '9c size_etc="4M"' user/scripts/dev_init.sh     #调整存储分区为4MB
-        sed -i '6c mtd_part_size=4194304' user/scripts/mtd_storage.sh
-        sed -i '82s/0xef0000/0xb70000/' linux-4.4.x/arch/mips/boot/dts/ralink/jdcloud-re-cp-02.dts
-        sed -i '85s/f80000/c00000/' linux-4.4.x/arch/mips/boot/dts/ralink/jdcloud-re-cp-02.dts
-        sed -i '87s/0xf80000 0x80000/0xc00000 0x400000/' linux-4.4.x/arch/mips/boot/dts/ralink/jdcloud-re-cp-02.dts
-        
-        #######移除无用VPN菜单##########################################################################
-        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config      #VPN
-        rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
-        rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
-        rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
-        sed -i '594c menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");' user/www/n56u_ribbon_fixed/state.js
-        sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
-        
-        
-        ######恢复基础工具###############################################################################
-        sed -i '/_OPENSS/{s/=n/=y/}' .config
-        sed -i '/HTTPS/{s/=n/=y/}' .config
-        sed -i '/IPSET/{s/=n/=y/}' .config
-        sed -i '/CURL/{s/=n/=y/}' .config
-        sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        
-        ######开始打包####################################################################################
-        cp -f .config configs/templates/$TNAME.config
+        cd /opt/rt-n56u
         make $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages
