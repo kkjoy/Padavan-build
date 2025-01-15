@@ -29,6 +29,7 @@ jobs:
         TNAME: JDCLOUD-RE-CP-02
       run: |
         cd /opt/rt-n56u
+        sed -i '5c TOOLCHAIN_URL:=https://github.com/tsl0922/padavan/releases/download/toolchain/mipsel-linux-uclibc-gcc-12.3.0.tar.xz' Makefile
         make $TNAME 0
         sudo mv -f images/*.trx /opt/images/
     - name : Upload packages
