@@ -24,12 +24,12 @@ jobs:
       run: |
         git clone --depth=1 https://github.com/vb1980/padavan-4.4.git /opt/rt-n56u
         mkdir -p /opt/images/
-        mv configs/templates/JDCLOUD-RE-CP-02.config configs/templates/RE-CP-02.config
     - name: Build Firmware
       env:
         TNAME: RE-CP-02
       run: |
         cd /opt/rt-n56u/trunk
+        mv configs/templates/JDCLOUD-RE-CP-02.config configs/templates/RE-CP-02.config
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
         exit 1
