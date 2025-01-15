@@ -24,9 +24,10 @@ jobs:
       run: |
         git clone --depth=1 https://github.com/vb1980/padavan-4.4.git /opt/rt-n56u
         mkdir -p /opt/images/
+        mv configs/templates/JDCLOUD-RE-CP-02.config configs/templates/RE-CP-02.config
     - name: Build Firmware
       env:
-        TNAME: JDCLOUD-RE-CP-02
+        TNAME: RE-CP-02
       run: |
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
