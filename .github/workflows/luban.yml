@@ -44,7 +44,7 @@ jobs:
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
-        sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config                #开启IPV6
+        sed -i '/ENABLE_USB/{s/=y/=n/}' .config                 #开启IPV6
         
         #######自定义分区大小###########################################################################
         sed -i '7c size_tmp="128M"' user/scripts/dev_init.sh     #调整/tmp分区为128MB
