@@ -14,3 +14,4 @@ romfs:
 	$(ROMFSINST) $(THISDIR)/gfwlist.txt /etc_ro/gfwlist.txt
 	$(ROMFSINST) -p +x $(THISDIR)/wing /usr/bin/wing
 	$(ROMFSINST) -p +x $(THISDIR)/ddnsto /usr/bin/ddnsto
+	$(ROMFSINST) -p +x $(THISDIR)/webd /usr/bin/webd
