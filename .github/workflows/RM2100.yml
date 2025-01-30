@@ -76,8 +76,8 @@ jobs:
         sed -i '/IPSET/{s/=n/=y/}' .config
         sed -i '/CURL/{s/=n/=y/}' .config
         sed -i '/HTOP/{s/=n/=y/}' .config
-        sed -i '/SFTP/{s/=n/=y/}' .config         #SFTP文件访问
-        
+        sed -i '/SFTP/{s/=n/=y/}' .config
+        sed -i '/NAPT66/{s/=n/=y/}' .config
         #######添加ipt2socks#############################################################################
         rm -rf user/ipt2socks
         cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
