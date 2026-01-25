@@ -64,6 +64,8 @@ jobs:
         sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
     
         cp -f $GITHUB_WORKSPACE/smartdns/openssl3 libs/libssl/Makefile
+        cp -f $GITHUB_WORKSPACE/smartdns/openssl.cnf libs/libssl/openssl.cnf
+        rm -rf libs/libssl/openssl-1.1.1k.patch
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
         sed -i '/HTTPS/{s/=n/=y/}' .config
