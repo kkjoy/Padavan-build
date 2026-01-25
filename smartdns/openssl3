@@ -1,8 +1,6 @@
-# 文件名: Makefile
-# 描述: 更新后的 OpenSSL Makefile
 
-SRC_NAME=openssl-3.0.12
-SRC_URL=https://www.openssl.org/source/openssl-3.0.12.tar.gz
+SRC_NAME=openssl-3.0.18
+SRC_URL=https://www.openssl.org/source/$(SRC_NAME).tar.gz
 THISDIR = $(shell pwd)
 
 # openssl use CROSS_COMPILE prefix
@@ -35,53 +33,53 @@ OPENSSL_CIPHERS += no-ec
 endif
 
 all: download_test extract_test config_test
-    $(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 download_test:
-    ( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-        wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-    fi )
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	fi )
 
 extract_test:
-    ( if [ ! -d $(SRC_NAME) ]; then \
-        tar -xf $(SRC_NAME).tar.gz; \
-        # 注意: OpenSSL 3.x 可能需要不同的补丁 \
-        # patch -d $(SRC_NAME) -p1 < $(SRC_NAME).patch; \
-    fi )
+	( if [ ! -d $(SRC_NAME) ]; then \
+		tar -xf $(SRC_NAME).tar.gz; \
+		# 注意: OpenSSL 3.x 可能需要不同的补丁 \
+		if [ -f $(SRC_NAME).patch ]; then patch -d $(SRC_NAME) -p1 < $(SRC_NAME).patch; fi; \
+	fi )
 
 config_test:
-    ( if [ -f ./config_done ]; then \
-        echo "the same configuration"; \
-    else \
-        make configure && touch config_done; \
-    fi )
+	( if [ -f ./config_done ]; then \
+		echo "the same configuration"; \
+	else \
+		make configure && touch config_done; \
+	fi )
 
 configure:
-    ( cd $(SRC_NAME) ; \
-    ./Configure \
-        linux-mips32 \
-        shared \
-        --prefix=$(STAGEDIR) \
-        --openssldir=/etc/ssl \
-        $(OPENSSL_CIPHERS) ; \
-    )
+	( cd $(SRC_NAME) ; \
+	./Configure \
+		linux-mips32 \
+		shared \
+		--prefix=$(STAGEDIR) \
+		--openssldir=/etc/ssl \
+		$(OPENSSL_CIPHERS) ; \
+	)
 
 clean:
-    if [ -f $(SRC_NAME)/Makefile ] ; then \
-        $(MAKE) -C $(SRC_NAME) clean ; \
-    fi ; \
-    rm -f config_done
+	if [ -f $(SRC_NAME)/Makefile ] ; then \
+		$(MAKE) -C $(SRC_NAME) clean ; \
+	fi ; \
+	rm -f config_done
 
 install:
-    $(MAKE) -C $(SRC_NAME) install_sw DESTDIR=""
-    $(MAKE) -C $(SRC_NAME) install_ssldirs DESTDIR="$(STAGEDIR)"
-    rm -f $(DESTDIR)/lib/libssl.a
-    rm -f $(DESTDIR)/lib/libcrypto.a
+	$(MAKE) -C $(SRC_NAME) install_sw DESTDIR=""
+	$(MAKE) -C $(SRC_NAME) install_ssldirs DESTDIR="$(STAGEDIR)"
+	rm -f $(DESTDIR)/lib/libssl.a
+	rm -f $(DESTDIR)/lib/libcrypto.a
 
 romfs:
-    cp -fP $(DESTDIR)/lib/libssl.so* $(ROMFSDIR)/lib
-    cp -fP $(DESTDIR)/lib/libcrypto.so* $(ROMFSDIR)/lib
-    $(ROMFSINST) /etc_ro/openssl.cnf
+	cp -fP $(DESTDIR)/lib/libssl.so* $(ROMFSDIR)/lib
+	cp -fP $(DESTDIR)/lib/libcrypto.so* $(ROMFSDIR)/lib
+	$(ROMFSINST) /etc_ro/openssl.cnf
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE),y)
-    $(ROMFSINST) $(SRC_NAME)/apps/openssl /usr/bin/openssl
+	$(ROMFSINST) $(SRC_NAME)/apps/openssl /usr/bin/openssl
 endif
