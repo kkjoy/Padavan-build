@@ -1,5 +1,5 @@
-#修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
-name: Build Padavan for RM2100
+
+name: Build RM2100 openssl3
 
 on:
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
         cp -f $GITHUB_WORKSPACE/banner                          user/scripts/banner
         cp -f $GITHUB_WORKSPACE/ipt2socks/mtd_storage.sh        user/scripts/mtd_storage.sh
         cp -f $GITHUB_WORKSPACE/autostart.sh                    user/scripts/autostart.sh
-        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
+        sed -i '/2011-2019/{s/2019/2026/}' user/www/Makefile    #过年好
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
@@ -74,6 +74,25 @@ jobs:
         sed -i '/HTOP/{s/=n/=y/}' .config
         sed -i '/SFTP/{s/=n/=y/}' .config
         sed -i '/NAPT66/{s/=n/=y/}' .config
+        #######添加ipt2socks#############################################################################
+        rm -rf user/ipt2socks
+        cp -rf $GITHUB_WORKSPACE/ipt2socks/  user/
+        sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
+        echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
+       
+        #######更新预编译dnsmasq##########################################################################
+        rm -rf user/dnsmasq
+        cp -rf $GITHUB_WORKSPACE/dnsmasq/  user/
+        
+        ########重新配置smartdns#########################################################################
+        cp -f $GITHUB_WORKSPACE/smartdns/Makefile  user/smartdns/Makefile
+        sed -i '/smartdns/{s/46.1/47.1/}' user/smartdns/Makefile
+        cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf  user/smartdns/smartdns_custom.conf
+        sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
+        wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
+        sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
+        cp -f $GITHUB_WORKSPACE/autostart.sh        user/scripts/autostart.sh
         
         ######开始打包####################################################################################
         sudo ./build_firmware_modify $TNAME 0
