@@ -66,6 +66,7 @@ jobs:
         cp -f $GITHUB_WORKSPACE/smartdns/openssl3 libs/libssl/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/openssl.cnf libs/libssl/openssl.cnf
         rm -rf libs/libssl/openssl-1.1.1k.patch
+        sed -i '/SRC_NAME/{s/3.0.18/3.5.4/}' libs/libssl/Makefile
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
         sed -i '/HTTPS/{s/=n/=y/}' .config
