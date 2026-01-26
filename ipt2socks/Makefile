@@ -4,7 +4,6 @@ THISDIR := $(shell pwd)
 all: 
 	@echo "ipt2socks build ok!"
 	curl -k -o gfwlist.txt https://raw.githubusercontent.com/pexcn/daily/gh-pages/gfwlist/gfwlist.txt
-	curl -k -o ddnsto https://fw21.koolcenter.com:60010/binary/ddnsto/linux/mipsel/ddnsto
 
 clean:
 	@echo "ipt2socks clean ok!"
