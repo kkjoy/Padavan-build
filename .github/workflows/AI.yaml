@@ -1,0 +1,202 @@
+name: 红米AC2100-KVR-WING-SmartDNS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # ============================================================
+  # Job 1: 预编译 smartdns (MIPS + OpenSSL 3 静态链接)
+  # ============================================================
+  build-smartdns:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact }}
+
+    steps:
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install -qq gcc-mipsel-linux-gnu g++-mipsel-linux-gnu \
+          libc6-dev-mipsel-cross binutils-mipsel-linux-gnu build-essential curl wget
+
+    - name: Build OpenSSL 3 for MIPS
+      run: |
+        cd /tmp
+        curl -sL -o openssl-3.4.0.tar.gz "https://www.openssl.org/source/openssl-3.4.0.tar.gz"
+        tar zxf openssl-3.4.0.tar.gz
+        cd openssl-3.4.0
+        ./Configure linux-mips32 \
+          --prefix=/opt/openssl-mipsel \
+          --cross-compile-prefix=mipsel-linux-gnu- \
+          no-shared no-dso no-tests no-apps no-docs
+        make -j$(nproc)
+        make install_sw
+
+    - name: Build smartdns with static OpenSSL 3
+      run: |
+        cd /tmp
+        curl -sL -o smartdns-Release48.4.tar.gz \
+          "https://codeload.github.com/pymumu/smartdns/tar.gz/refs/tags/Release48.4"
+        tar zxf smartdns-Release48.4.tar.gz
+        cd smartdns-Release48.4/src
+
+        make CC=mipsel-linux-gnu-gcc \
+             AR=mipsel-linux-gnu-ar \
+             STATIC=yes \
+             EXTRA_CFLAGS="-I/opt/openssl-mipsel/include -DOPENSSL_SUPPRESS_DEPRECATED -DOPENSSL_API_COMPAT=0x30000000L" \
+             EXTRA_LDFLAGS="-L/opt/openssl-mipsel/lib -static" \
+             CFLAGS="-O2 -Wall -Wno-error -I/opt/openssl-mipsel/include -DOPENSSL_SUPPRESS_DEPRECATED -DOPENSSL_API_COMPAT=0x30000000L"
+
+        # 验证
+        file smartdns
+        mipsel-linux-gnu-strings smartdns | grep "OpenSSL" | head -3
+
+        # 打包
+        mkdir -p /tmp/smartdns-package
+        cp smartdns /tmp/smartdns-package/
+        cat > /tmp/smartdns-package/smartdns.sh << 'EOF'
+        #!/bin/sh
+        PIDFILE=/var/run/smartdns.pid
+        CONFIG=/etc_ro/smartdns_custom.conf
+        case "$1" in
+          start) /usr/bin/smartdns -c "$CONFIG" -d; echo $! > "$PIDFILE" ;;
+          stop) kill $(cat "$PIDFILE") 2>/dev/null; rm -f "$PIDFILE" ;;
+          restart) kill $(cat "$PIDFILE") 2>/dev/null; sleep 1; /usr/bin/smartdns -c "$CONFIG" -d ;;
+        esac
+        EOF
+        chmod +x /tmp/smartdns-package/smartdns.sh
+
+    - name: Upload smartdns artifact
+      id: upload
+      uses: actions/upload-artifact@master
+      with:
+        name: smartdns-mipsel-Release48.4
+        path: /tmp/smartdns-package/
+        retention-days: 7
+
+  # ============================================================
+  # Job 2: 编译 Padavan 固件
+  # ============================================================
+  build-firmware:
+    runs-on: ubuntu-latest
+    needs: build-smartdns
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
+          cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
+          pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
+
+    - name: Clone source code
+      run: |
+        git clone --depth=1 https://github.com/keke1023/Padavan.git /opt/rt-n56u
+        cd /opt/rt-n56u/toolchain-mipsel
+        sh dl_toolchain.sh
+        mkdir -p /opt/images/
+
+    # ========== 下载预编译的 smartdns ==========
+    - name: Download pre-built smartdns
+      uses: actions/download-artifact@master
+      with:
+        name: smartdns-mipsel-Release48.4
+        path: /tmp/smartdns-package/
+
+    # ========== 构建固件 ==========
+    - name: Build Firmware
+      env:
+        TNAME: RM2100
+      run: |
+        cd /opt/rt-n56u/trunk
+        if [ ! -f configs/templates/$TNAME.config ] ; then
+          echo "configs/templates/$TNAME.config not found"
+          exit 1
+        fi
+        cp -f configs/templates/$TNAME.config .config
+
+        #######最小化系统及更新设置#######################################################################
+        cp -f $GITHUB_WORKSPACE/asus_logo.png user/www/n56u_ribbon_fixed/bootstrap/img/asus_logo.png
+        cp -f $GITHUB_WORKSPACE/banner user/scripts/banner
+        cp -f $GITHUB_WORKSPACE/ipt2socks/mtd_storage.sh user/scripts/mtd_storage.sh
+        cp -f $GITHUB_WORKSPACE/autostart.sh user/scripts/autostart.sh
+        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile
+        sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc
+        sed -i '/INCLUDE/{s/=y/=n/}' .config
+        sed -i '/LANG_CN/{s/=n/=y/}' .config
+        sed -i '/ENABLE_IPV6/{s/=n/=y/}' .config
+        sed -i '898,899d' user/rc/net.c
+
+        #######自定义分区大小###########################################################################
+        sed -i '7c size_tmp="32M"' user/scripts/dev_init.sh
+        sed -i '9c size_etc="97M"' user/scripts/dev_init.sh
+        sed -i '6c mtd_part_size=101711872' user/scripts/mtd_storage.sh
+        sed -i '878c CONFIG_MTD_STORE_PART_SIZ=0x6100000' configs/boards/RM2100/kernel-3.4.x-5.0.config
+
+        #######移除无用VPN菜单##########################################################################
+        echo "CONFIG_FIRMWARE_WEBUI_HIDE_VPN=y" >> .config
+        rm -rf user/www/n56u_ribbon_fixed/vpn_clients.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpncli.asp
+        rm -rf user/www/n56u_ribbon_fixed/vpnsrv.asp
+        sed -i '594c menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");' user/www/n56u_ribbon_fixed/state.js
+        sed -i '595c menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");' user/www/n56u_ribbon_fixed/state.js
+
+        #######更新软件源码###############################################################################
+        rm -f user/htop/Makefile
+        wget -t5 --timeout=20 --no-check-certificate -O user/htop/Makefile https://github.com/vb1980/Padavan-KVR/raw/refs/heads/main/trunk/user/htop/Makefile
+        sed -i '1c SRC_NAME = htop-3.4.1' user/htop/Makefile
+        sed -i '2c SRC_URL = https://github.com/htop-dev/htop/releases/download/3.4.1/htop-3.4.1.tar.xz' user/htop/Makefile
+        sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile
+        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
+
+        #######恢复基础工具###############################################################################
+        sed -i '/_OPENSS/{s/=n/=y/}' .config
+        sed -i '/HTTPS/{s/=n/=y/}' .config
+        sed -i '/IPSET/{s/=n/=y/}' .config
+        sed -i '/CURL/{s/=n/=y/}' .config
+        sed -i '/HTOP/{s/=n/=y/}' .config
+        sed -i '/SFTP/{s/=n/=y/}' .config
+        sed -i '/NAPT66/{s/=n/=y/}' .config
+
+        #######添加ipt2socks#############################################################################
+        rm -rf user/ipt2socks
+        cp -rf $GITHUB_WORKSPACE/ipt2socks/ user/
+        sed -i '163c dir_$(CONFIG_FIRMWARE_INCLUDE_IP2SOCKS)  += ipt2socks' user/Makefile
+        echo "CONFIG_FIRMWARE_INCLUDE_IP2SOCKS=y" >> .config
+
+        #######更新预编译dnsmasq##########################################################################
+        rm -rf user/dnsmasq
+        cp -rf $GITHUB_WORKSPACE/dnsmasq/ user/
+
+        ########配置 smartdns (使用预编译的 OpenSSL 3 静态链接二进制) ##############################
+        rm -rf user/smartdns
+        mkdir -p user/smartdns
+        cp /tmp/smartdns-package/smartdns user/smartdns/
+        cp /tmp/smartdns-package/smartdns.sh user/smartdns/
+        chmod +x user/smartdns/smartdns user/smartdns/smartdns.sh
+        cp -f $GITHUB_WORKSPACE/smartdns/Makefile user/smartdns/Makefile
+        cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf user/smartdns/smartdns_custom.conf
+        wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
+        sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
+        sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
+        cp -f $GITHUB_WORKSPACE/autostart.sh user/scripts/autostart.sh
+
+        ######开始打包####################################################################################
+        sudo ./build_firmware_modify $TNAME 0
+        sudo mv -f images/*.trx /opt/images/
+
+    - name: Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: RM2100-kvr-wing-smartdns-ossl3
+        path: /opt/images
