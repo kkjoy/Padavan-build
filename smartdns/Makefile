@@ -3,7 +3,6 @@ THISDIR := $(shell pwd)
 
 all: 
 	@echo "smartdns build ok!"
-	curl -k -o smartdns https://github.com/pymumu/smartdns/releases/download/Release48.4/smartdns-mipsel
 
 clean:
 	@echo "smartdns clean ok!"
