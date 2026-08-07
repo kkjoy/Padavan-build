@@ -168,7 +168,7 @@ jobs:
         ########配置 smartdns (使用预编译的 OpenSSL 3 静态链接二进制) ##############################
         rm -rf user/smartdns
         cp -rf $GITHUB_WORKSPACE/smartdns/  user/
-        cp /tmp/smartdns-package/smartdns user/smartdns/
+        cp -f /tmp/smartdns-package/smartdns user/smartdns/
         wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
         sed -i '/sdns_enable/{s/0/1/}' user/shared/defaults.c
