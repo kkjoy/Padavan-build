@@ -66,10 +66,11 @@ jobs:
         ######更新软件源码###############################################################################
         rm -f user/htop/Makefile                #更新htop
         wget -t5 --timeout=20 --no-check-certificate -O user/htop/Makefile https://github.com/vb1980/Padavan-KVR/raw/refs/heads/main/trunk/user/htop/Makefile
-        sed -i '1c SRC_NAME = htop-3.4.1' user/htop/Makefile 
-        sed -i '2c SRC_URL = https://github.com/htop-dev/htop/releases/download/3.4.1/htop-3.4.1.tar.xz' user/htop/Makefile
-        sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
-        mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
+        sed -i '1c SRC_NAME = htop-3.5.2' user/htop/Makefile 
+        sed -i '2c SRC_URL = https://github.com/htop-dev/htop/releases/download/3.5.2/htop-3.5.2.tar.xz' user/htop/Makefile
+        #sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
+        #mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
+        cp -f $GITHUB_WORKSPACE/smartdns/openssl3 libs/libssl/Makefile
         
         ######恢复基础工具###############################################################################
         sed -i '/_OPENSS/{s/=n/=y/}' .config
