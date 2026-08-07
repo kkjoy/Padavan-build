@@ -42,7 +42,7 @@ jobs:
         cp -f $GITHUB_WORKSPACE/banner                          user/scripts/banner
         cp -f $GITHUB_WORKSPACE/ipt2socks/mtd_storage.sh        user/scripts/mtd_storage.sh
         cp -f $GITHUB_WORKSPACE/autostart.sh                    user/scripts/autostart.sh
-        sed -i '/2011-2019/{s/2019/2025/}' user/www/Makefile    #过年好
+        sed -i '/2011-2019/{s/2019/2026/}' user/www/Makefile    #过年好
         sed -i '3c FIRMWARE_BUILDS_REV=lissom' versions.inc     #更新版本
         sed -i '/INCLUDE/{s/=y/=n/}' .config                    #关闭所有INCLUDE
         sed -i '/LANG_CN/{s/=n/=y/}' .config                    #设置默认语言为中文
