@@ -1,5 +1,5 @@
 SRC_NAME = smartdns
-VERSION = Release48.3
+VERSION = Release48.4
 ARCH = mipsel
 BIN_NAME = smartdns-$(ARCH)
 SRC_URL = https://github.com/pymumu/smartdns/releases/download/$(VERSION)/$(BIN_NAME)
