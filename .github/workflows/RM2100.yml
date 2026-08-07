@@ -91,7 +91,7 @@ jobs:
         
         ########重新配置smartdns#########################################################################
         rm -rf user/smartdns
-        cp -rf $GITHUB_WORKSPACE/smartdns/  user
+        cp -rf $GITHUB_WORKSPACE/smartdns/  user/
         sed -i '4c <title><#Web_Title#> - <#menu5_24#></title>' user/www/n56u_ribbon_fixed/Advanced_smartdns.asp
         wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config            #smartdns
