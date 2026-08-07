@@ -180,9 +180,6 @@ jobs:
         rm -rf user/smartdns
         mkdir -p user/smartdns
         cp /tmp/smartdns-package/smartdns user/smartdns/
-        cp /tmp/smartdns-package/smartdns.sh user/smartdns/
-        chmod +x user/smartdns/smartdns user/smartdns/smartdns.sh
-        cp -f $GITHUB_WORKSPACE/smartdns/Makefile user/smartdns/Makefile
         cp -f $GITHUB_WORKSPACE/smartdns/smartdns_custom.conf user/smartdns/smartdns_custom.conf
         wget https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-smartdns.conf -O user/smartdns/ad.hosts
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
