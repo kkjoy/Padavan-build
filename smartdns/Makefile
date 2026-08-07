@@ -1,28 +1,12 @@
-SRC_NAME = smartdns
-VERSION = Release48.4
-BIN_NAME = smartdns-mipsel
-SRC_URL = https://github.com/pymumu/smartdns/releases/download/$(VERSION)/$(BIN_NAME)
-THISDIR = $(shell pwd)
+THISDIR := $(shell pwd)
 
-all: download_test config_test
-	@echo "smartdns binary ready"
-	
-download_test:
-	( if [ ! -f $(BIN_NAME) ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(BIN_NAME) $(SRC_URL); \
-		chmod +x $(BIN_NAME); \
-	fi )
-	
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		touch config_done; \
-	fi )
+
+all: 
+	@echo "smartdns build ok!"
+	curl -k -o smartdns https://github.com/pymumu/smartdns/releases/download/Release48.4/smartdns-mipsel
 
 clean:
-	rm -f $(BIN_NAME)
-	rm -f config_done
+	@echo "smartdns clean ok!"
 
 romfs:
 	$(ROMFSINST) -p +x $(THISDIR)/smartdns /usr/bin/smartdns
