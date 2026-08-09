@@ -35,12 +35,6 @@ jobs:
           cd smartdns-${SMARTDNS_VERSION}/src
           ln -sf ../../include include
 
-      - name: 修复 smartdns.rs 类型 (i64 -> i32 for mipsel)
-        run: |
-          cd smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
-          sed -i 's/pub cached_time: i64/pub cached_time: i32/g' src/smartdns.rs
-          sed -i 's/insert_time: i64/insert_time: i32/g' src/smartdns.rs
-
       - name: 编译 smartdns_ui.so
         run: |
           cd smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
