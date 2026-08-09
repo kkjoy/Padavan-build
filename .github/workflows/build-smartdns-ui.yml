@@ -1,0 +1,73 @@
+name: build-smartdns-ui-mipsel
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'smartdns-ui-workflow.yml'
+
+env:
+  SMARTDNS_VERSION: "Release48.4"
+  CC: "mipsel-linux-gnu-gcc"
+  AR: "mipsel-linux-gnu-ar"
+
+jobs:
+  build-smartdns-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 安装 MIPS 交叉编译工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mipsel-linux-gnu libc6-dev-mipsel-cross libclang-dev
+
+      - name: 安装 Rust 工具链
+        run: |
+          rustup toolchain install nightly
+          rustup component add rust-src --toolchain nightly
+
+      - name: 下载 smartdns 源码
+        run: |
+          curl -sL -o smartdns.tar.gz https://codeload.github.com/pymumu/smartdns/tar.gz/refs/tags/${SMARTDNS_VERSION}
+          tar zxf smartdns.tar.gz
+          cd smartdns-${SMARTDNS_VERSION}/src
+          ln -sf ../../include include
+
+      - name: 修复 smartdns.rs 类型 (i64 -> i32 for mipsel)
+        run: |
+          cd smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
+          sed -i 's/pub cached_time: i64/pub cached_time: i32/g' src/smartdns.rs
+          sed -i 's/insert_time: i64/insert_time: i32/g' src/smartdns.rs
+
+      - name: 编译 smartdns_ui.so
+        run: |
+          cd smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
+          export CC=mipsel-linux-gnu-gcc
+          export AR=mipsel-linux-gnu-ar
+          export BINDGEN_EXTRA_CLANG_ARGS="--target=mipsel-unknown-linux-gnu --sysroot=/ -I${GITHUB_WORKSPACE}/smartdns-${SMARTDNS_VERSION}/src/include"
+
+          # 使用 nightly + -Z build-std 编译
+          rustup run nightly cargo build \
+            --target mipsel-unknown-linux-gnu \
+            --release \
+            --features build-release \
+            -Z build-std=std,core,alloc
+
+      - name: 验证产物
+        run: |
+          cd smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
+          echo "=== 文件信息 ==="
+          file target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so
+          echo "=== 导出符号 ==="
+          mipsel-linux-gnu-nm -D target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so | grep -E "dns_plugin_init|dns_plugin_exit|dns_plugin_api_version"
+          echo "=== 架构验证 ==="
+          mipsel-linux-gnu-readelf -h target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so | grep -E "Machine|Class|Type"
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartdns-ui-mipsel
+          path: smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui/target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so
+          retention-days: 30
