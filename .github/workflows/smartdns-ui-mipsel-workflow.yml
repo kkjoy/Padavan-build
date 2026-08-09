@@ -1,0 +1,150 @@
+name: smartdns-ui-mipsel-build
+
+# ============================================================
+# 编译 smartdns_ui.so for MT7621 Padavan (mipsel-unknown-linux-gnu)
+#
+# 基于 smartdns Release48.4 官方源码
+# 参考 plugin/smartdns-ui/Makefile + build.rs + Cargo.toml
+#
+# 构建逻辑:
+#   1. Makefile 自动检测 CC=mipsel-linux-gnu-gcc → 目标 mipsel-unknown-linux-gnu
+#   2. build.rs 使用 bindgen 从 smartdns.h 生成 FFI 绑定
+#   3. build-release 特性: 不链接 libsmartdns-test.a, 插件由 smartdns dlopen 加载
+#   4. 输出: libsmartdns_ui.so → 重命名为 smartdns_ui.so
+# ============================================================
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/smartdns-ui-mipsel-workflow.yml'
+
+env:
+  SMARTDNS_VERSION: "Release48.4"
+  CC: "mipsel-linux-gnu-gcc"
+
+jobs:
+  build-smartdns-ui:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 安装 MIPS 交叉编译工具链
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install -qq \
+          gcc-mipsel-linux-gnu g++-mipsel-linux-gnu \
+          libc6-dev-mipsel-cross binutils-mipsel-linux-gnu \
+          build-essential cmake pkg-config curl wget tar file xz-utils \
+          libclang-dev libssl-dev
+
+        echo "=== 交叉编译器 ==="
+        mipsel-linux-gnu-gcc --version | head -1
+        echo "dumpmachine:"
+        mipsel-linux-gnu-gcc -dumpmachine
+        echo "sysroot:"
+        mipsel-linux-gnu-gcc -print-sysroot
+
+    - name: 安装 Rust + bindgen
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+        source "$HOME/.cargo/env"
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+        rustup target add mipsel-unknown-linux-gnu
+
+        # 安装 bindgen-cli (smartdns-ui build.rs 依赖)
+        BINDGEN_VERSION="0.71.0"
+        curl -sL -o /tmp/bindgen-cli.tar.xz \
+          "https://github.com/rust-lang/rust-bindgen/releases/download/v${BINDGEN_VERSION}/bindgen-cli-x86_64-unknown-linux-gnu.tar.xz"
+        tar xf /tmp/bindgen-cli.tar.xz -C /tmp/
+        chmod +x /tmp/bindgen-cli
+        sudo mv /tmp/bindgen-cli /usr/local/bin/bindgen-cli
+        sudo ln -sf /usr/local/bin/bindgen-cli /usr/local/bin/bindgen
+
+        echo "=== 版本信息 ==="
+        rustc --version
+        cargo --version
+        bindgen-cli --version
+        echo "=== 可用的 mipsel 目标 ==="
+        rustup target list | grep mipsel
+
+    - name: 下载 smartdns 源码
+      run: |
+        cd /tmp
+        curl -sL -o smartdns-${SMARTDNS_VERSION}.tar.gz \
+          "https://codeload.github.com/pymumu/smartdns/tar.gz/refs/tags/${SMARTDNS_VERSION}"
+        tar zxf smartdns-${SMARTDNS_VERSION}.tar.gz
+
+        # 验证 build.rs 需要的头文件
+        # build.rs 查找路径: {SMARTDNS_SRC_DIR}/include/smartdns/smartdns.h
+        # SMARTDNS_SRC_DIR = ../../src (相对于 plugin/smartdns-ui)
+        # 即 smartdns-Release48.4/src/include/smartdns/smartdns.h
+        echo "=== smartdns 目录结构 ==="
+        echo "根目录 include/:"
+        ls /tmp/smartdns-${SMARTDNS_VERSION}/include/smartdns/ 2>/dev/null || echo "不存在"
+        echo "src/ 目录:"
+        ls /tmp/smartdns-${SMARTDNS_VERSION}/src/include/smartdns/ 2>/dev/null || echo "不存在"
+
+        # 如果 include/ 在根目录, 创建 src/include 符号链接
+        if [ ! -f /tmp/smartdns-${SMARTDNS_VERSION}/src/include/smartdns/smartdns.h ]; then
+          echo "创建 src/include → ../../include 符号链接"
+          mkdir -p /tmp/smartdns-${SMARTDNS_VERSION}/src
+          ln -sf ../../include /tmp/smartdns-${SMARTDNS_VERSION}/src/include
+        fi
+
+        test -f /tmp/smartdns-${SMARTDNS_VERSION}/src/include/smartdns/smartdns.h
+        echo "smartdns.h 验证通过"
+
+    - name: 编译 smartdns_ui.so
+      run: |
+        set -e
+        cd /tmp/smartdns-${SMARTDNS_VERSION}/plugin/smartdns-ui
+
+        echo "=== Makefile 自动检测 ==="
+        echo "CC=$CC"
+        echo "dumpmachine: $(mipsel-linux-gnu-gcc -dumpmachine)"
+
+        # 设置编译环境
+        export CC=mipsel-linux-gnu-gcc
+        export AR=mipsel-linux-gnu-ar
+
+        # 执行官方 Makefile 编译
+        # Makefile 会自动:
+        #   1. 通过 CC -dumpmachine 检测目标三元组
+        #   2. 通过 CC -print-sysroot 定位 sysroot
+        #   3. 设置 BINDGEN_EXTRA_CLANG_ARGS
+        #   4. cargo build --target=<detected> --release --features build-release
+        make all
+
+        echo "=== 编译产物 ==="
+        ls -la target/
+        if [ -f target/smartdns_ui.so ]; then
+            echo "smartdns_ui.so 生成成功!"
+        elif [ -f target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so ]; then
+            echo "找到目标文件, 复制为 smartdns_ui.so"
+            cp target/mipsel-unknown-linux-gnu/release/libsmartdns_ui.so target/smartdns_ui.so
+        fi
+
+        # 验证产物
+        echo "=== 文件类型 ==="
+        file target/smartdns_ui.so
+        echo "=== ELF 头信息 ==="
+        mipsel-linux-gnu-readelf -h target/smartdns_ui.so 2>/dev/null || \
+          readelf -h target/smartdns_ui.so 2>/dev/null || true
+        echo "=== 共享库依赖 ==="
+        mipsel-linux-gnu-readelf -d target/smartdns_ui.so 2>/dev/null | head -30 || \
+          readelf -d target/smartdns_ui.so 2>/dev/null | head -30 || true
+
+        # 复制到输出目录
+        mkdir -p /tmp/smartdns-output
+        cp target/smartdns_ui.so /tmp/smartdns-output/
+        ls -lh /tmp/smartdns-output/
+
+    - name: 上传 smartdns_ui.so
+      uses: actions/upload-artifact@v4
+      with:
+        name: smartdns-ui-mipsel-Release48.4-so
+        path: /tmp/smartdns-output/smartdns_ui.so
+        retention-days: 30
