@@ -32,7 +32,7 @@ function initial(){
 	show_banner(2);
 	show_menu(5,16);
 	show_footer();
-	fill_status(smartdns_status());
+	fill_status(smartdns_status_code);
 }
 
 function applyRule(){
