@@ -1,9 +1,9 @@
 SRC_NAME = htop-3.5.2
-SRC_URL = https://github.com/htop-dev/htop/releases/download/3.5.2/htop-3.5.2.tar.xz
+SRC_URL = https://github.com/htop-dev/htop/releases/download/3.5.2/htop-3.5.2.tar.xz' user/htop/Makefile
 THISDIR = $(shell pwd)
 
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
@@ -12,21 +12,31 @@ download_test:
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xf $(SRC_NAME).tar.xz ; \
+		tar -xf $(SRC_NAME).tar.xz; \
 	fi )
 
 config_test:
 	( if [ -f ./config_done ]; then \
 		echo "the same configuration"; \
 	else \
-		cd $(SRC_NAME) && ./autogen.sh && ./configure --prefix=/usr && cd .. ; \
-		touch config_done; \
+		make configure && touch config_done; \
 	fi )
+
+configure:
+	( cd $(SRC_NAME) ; \
+	./autogen.sh ; \
+	./configure \
+		--prefix=/usr \
+		--enable-unicode \
+		HTOP_NCURSESW_CONFIG_SCRIPT="$(STAGEDIR)/bin/ncursesw6-config" \
+		--host=$(HOST_TARGET) \
+		--build=$(HOST_BUILD) ; \
+	)
 
 clean:
 	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ;
+		$(MAKE) -C $(SRC_NAME) distclean ; \
+	fi ; \
 	rm -f config_done
 
 romfs:
