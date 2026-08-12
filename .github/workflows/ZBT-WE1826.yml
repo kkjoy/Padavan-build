@@ -58,6 +58,8 @@ jobs:
         sed -i '1801c CONFIG_RAETH_ESW_PORT_LAN4=0' configs/boards/OYE-001/kernel-3.4.x.config
         cp -f $GITHUB_WORKSPACE/ZBT.board.h  configs/boards/OYE-001/board.h
         ######更新软件源码###############################################################################
+        rm -rf user/htop                         #更新htop
+        cp -rf $GITHUB_WORKSPACE/htop/ user/
         sed -i '1c SRC_NAME=openssl-1.1.1w' libs/libssl/Makefile                #更新openssl
         mv libs/libssl/openssl-1.1.1k.patch libs/libssl/openssl-1.1.1w.patch
         
